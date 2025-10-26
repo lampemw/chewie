@@ -8,6 +8,7 @@ import 'package:chewie/src/helpers/utils.dart';
 import 'package:chewie/src/material/material_progress_bar.dart';
 import 'package:chewie/src/material/widgets/options_dialog.dart';
 import 'package:chewie/src/material/widgets/playback_speed_dialog.dart';
+import 'package:chewie/src/material/widgets/subtitles_dialog.dart';
 import 'package:chewie/src/models/option_item.dart';
 import 'package:chewie/src/models/subtitle_model.dart';
 import 'package:chewie/src/notifiers/index.dart';
@@ -120,7 +121,7 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
                         ),
                         child: _buildSubtitles(
                           context,
-                          chewieController.subtitle!,
+                          chewieController.selectedSubtitles,
                         ),
                       ),
                     _buildBottomBar(context),
@@ -163,6 +164,9 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
   }
 
   Widget _buildSubtitleToggle({IconData? icon, bool isPadded = false}) {
+    if (chewieController.subtitlesList?.isEmpty ?? true) {
+      return const SizedBox();
+    }
     return IconButton(
       padding: isPadded ? const EdgeInsets.all(8.0) : EdgeInsets.zero,
       icon: Icon(icon, color: _subtitleOn ? Colors.white : Colors.grey[700]),
@@ -221,11 +225,15 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
     );
   }
 
-  Widget _buildSubtitles(BuildContext context, Subtitles subtitles) {
+  Widget _buildSubtitles(BuildContext context, Subtitles? selectedSubtitles) {
     if (!_subtitleOn) {
       return const SizedBox();
     }
-    final currentSubtitle = subtitles.getByPosition(_subtitlesPosition);
+
+    if (selectedSubtitles == null) {
+      return const SizedBox();
+    }
+    final currentSubtitle = selectedSubtitles.getByPosition(_subtitlesPosition);
     if (currentSubtitle.isEmpty) {
       return const SizedBox();
     }
@@ -284,8 +292,8 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
                       _buildPosition(iconColor),
                     const Spacer(),
                     if (chewieController.showControls &&
-                        chewieController.subtitle != null &&
-                        chewieController.subtitle!.isNotEmpty)
+                        chewieController.selectedSubtitles != null &&
+                        chewieController.selectedSubtitles!.isNotEmpty)
                       _buildSubtitleToggle(icon: Icons.subtitles),
                     if (chewieController.showOptions)
                       _buildOptionsButton(icon: Icons.settings),
@@ -453,9 +461,31 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
   }
 
   void _onSubtitleTap() {
-    setState(() {
-      _subtitleOn = !_subtitleOn;
-    });
+    if (chewieController.subtitlesList?.isEmpty ?? true) {
+      return;
+    }
+
+    if (chewieController.subtitlesList!.length == 1) {
+      setState(() {
+        _subtitleOn = !_subtitleOn;
+      });
+      return;
+    }
+
+    showModalBottomSheet<Subtitles>(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: chewieController.useRootNavigator,
+      builder: (context) => SubtitlesDialog(
+        subtitlesList: chewieController.subtitlesList!,
+        selectedSubtitles: chewieController.selectedSubtitles,
+        onSubtitlesSelected: (subtitles) {
+          Navigator.of(context).pop();
+          _subtitleOn = subtitles != null;
+          chewieController.selectedSubtitles = subtitles;
+        },
+      ),
+    );
   }
 
   void _cancelAndRestartTimer() {
@@ -471,7 +501,12 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
   Future<void> _initialize() async {
     _subtitleOn =
         chewieController.showSubtitles &&
-        (chewieController.subtitle?.isNotEmpty ?? false);
+        (chewieController.subtitlesList?.isNotEmpty ?? false);
+
+    if (_subtitleOn) {
+      chewieController.selectedSubtitles ??=
+          chewieController.subtitlesList?.first;
+    }
     controller.addListener(_updateState);
 
     _updateState();

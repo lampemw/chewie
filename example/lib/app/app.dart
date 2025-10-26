@@ -72,38 +72,69 @@ class _ChewieDemoState extends State<ChewieDemo> {
     //     ),
     //   ];
 
-    final subtitles = [
-      Subtitle(
-        index: 0,
-        start: Duration.zero,
-        end: const Duration(seconds: 10),
-        text: const TextSpan(
-          children: [
-            TextSpan(
-              text: 'Hello',
-              style: TextStyle(color: Colors.red, fontSize: 22),
-            ),
-            TextSpan(
-              text: ' from ',
-              style: TextStyle(color: Colors.green, fontSize: 20),
-            ),
-            TextSpan(
-              text: 'subtitles',
-              style: TextStyle(color: Colors.blue, fontSize: 18),
-            ),
-          ],
+    final subtitlesList = [
+      Subtitles('English', [
+        Subtitle(
+          index: 0,
+          start: Duration.zero,
+          end: const Duration(seconds: 10),
+          text: const TextSpan(
+            children: [
+              TextSpan(
+                text: 'Hello',
+                style: TextStyle(color: Colors.red, fontSize: 22),
+              ),
+              TextSpan(
+                text: ' from ',
+                style: TextStyle(color: Colors.green, fontSize: 20),
+              ),
+              TextSpan(
+                text: 'subtitles',
+                style: TextStyle(color: Colors.blue, fontSize: 18),
+              ),
+            ],
+          ),
         ),
-      ),
-      Subtitle(
-        index: 0,
-        start: const Duration(seconds: 10),
-        end: const Duration(seconds: 20),
-        text: 'Whats up? :)',
-        // text: const TextSpan(
-        //   text: 'Whats up? :)',
-        //   style: TextStyle(color: Colors.amber, fontSize: 22, fontStyle: FontStyle.italic),
-        // ),
-      ),
+        Subtitle(
+          index: 0,
+          start: const Duration(seconds: 10),
+          end: const Duration(seconds: 20),
+          text: 'Whats up? :)',
+          // text: const TextSpan(
+          //   text: 'Whats up? :)',
+          //   style: TextStyle(color: Colors.amber, fontSize: 22, fontStyle: FontStyle.italic),
+          // ),
+        ),
+      ]),
+      Subtitles('Spanish', [
+        Subtitle(
+          index: 0,
+          start: Duration.zero,
+          end: const Duration(seconds: 10),
+          text: const TextSpan(
+            children: [
+              TextSpan(
+                text: 'Hola',
+                style: TextStyle(color: Colors.red, fontSize: 22),
+              ),
+              TextSpan(
+                text: 'de ',
+                style: TextStyle(color: Colors.green, fontSize: 20),
+              ),
+              TextSpan(
+                text: 'subtitulos',
+                style: TextStyle(color: Colors.blue, fontSize: 18),
+              ),
+            ],
+          ),
+        ),
+        Subtitle(
+          index: 0,
+          start: const Duration(seconds: 10),
+          end: const Duration(seconds: 20),
+          text: '¿Qué tal? :)',
+        ),
+      ]),
     ];
 
     _chewieController = ChewieController(
@@ -124,7 +155,7 @@ class _ChewieDemoState extends State<ChewieDemo> {
           ),
         ];
       },
-      subtitle: Subtitles(subtitles),
+      subtitlesList: subtitlesList,
       showSubtitles: true,
       subtitleBuilder: (context, dynamic subtitle) => Container(
         padding: const EdgeInsets.all(10.0),

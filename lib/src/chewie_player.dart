@@ -313,7 +313,7 @@ class ChewieController extends ChangeNotifier {
     this.transformationController,
     this.zoomAndPan = false,
     this.maxScale = 2.5,
-    this.subtitle,
+    this.subtitlesList,
     this.showSubtitles = false,
     this.subtitleBuilder,
     this.customControls,
@@ -366,7 +366,7 @@ class ChewieController extends ChangeNotifier {
     TransformationController? transformationController,
     bool? zoomAndPan,
     double? maxScale,
-    Subtitles? subtitle,
+    List<Subtitles>? subtitlesList,
     bool? showSubtitles,
     Widget Function(BuildContext, dynamic)? subtitleBuilder,
     Widget? customControls,
@@ -429,7 +429,7 @@ class ChewieController extends ChangeNotifier {
       additionalOptions: additionalOptions ?? this.additionalOptions,
       showControls: showControls ?? this.showControls,
       showSubtitles: showSubtitles ?? this.showSubtitles,
-      subtitle: subtitle ?? this.subtitle,
+      subtitlesList: subtitlesList ?? this.subtitlesList,
       subtitleBuilder: subtitleBuilder ?? this.subtitleBuilder,
       customControls: customControls ?? this.customControls,
       errorBuilder: errorBuilder ?? this.errorBuilder,
@@ -494,13 +494,17 @@ class ChewieController extends ChangeNotifier {
   Widget Function(BuildContext context, dynamic subtitle)? subtitleBuilder;
 
   /// Add a List of Subtitles here in `Subtitles.subtitle`
-  Subtitles? subtitle;
+  List<Subtitles>? subtitlesList;
 
   /// Determines whether subtitles should be shown by default when the video starts.
   ///
   /// If set to `true`, subtitles will be displayed automatically when the video
   /// begins playing. If set to `false`, subtitles will be hidden by default.
   bool showSubtitles;
+
+  // If multiple [Subtitles] are provided, this will be the subtitles that are
+  // selected by default when the video starts.
+  Subtitles? selectedSubtitles;
 
   /// The controller for the video you want to play
   final VideoPlayerController videoPlayerController;
@@ -715,8 +719,8 @@ class ChewieController extends ChangeNotifier {
     await videoPlayerController.setVolume(volume);
   }
 
-  void setSubtitle(List<Subtitle> newSubtitle) {
-    subtitle = Subtitles(newSubtitle);
+  void setSubtitles(List<Subtitles> newSubtitlesList) {
+    subtitlesList = newSubtitlesList;
   }
 }
 

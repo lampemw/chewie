@@ -1,7 +1,9 @@
 class Subtitles {
-  Subtitles(this.subtitle);
+  Subtitles(this.name, this.subtitle);
 
   final List<Subtitle?> subtitle;
+
+  final String name;
 
   bool get isEmpty => subtitle.isEmpty;
 

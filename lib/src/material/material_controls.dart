@@ -8,6 +8,7 @@ import 'package:chewie/src/helpers/utils.dart';
 import 'package:chewie/src/material/material_progress_bar.dart';
 import 'package:chewie/src/material/widgets/options_dialog.dart';
 import 'package:chewie/src/material/widgets/playback_speed_dialog.dart';
+import 'package:chewie/src/material/widgets/subtitles_dialog.dart';
 import 'package:chewie/src/models/option_item.dart';
 import 'package:chewie/src/models/subtitle_model.dart';
 import 'package:chewie/src/notifiers/index.dart';
@@ -93,7 +94,7 @@ class _MaterialControlsState extends State<MaterialControls>
                       ),
                       child: _buildSubtitles(
                         context,
-                        chewieController.subtitle!,
+                        chewieController.subtitlesList!,
                       ),
                     ),
                   _buildBottomBar(context),
@@ -208,11 +209,18 @@ class _MaterialControlsState extends State<MaterialControls>
     );
   }
 
-  Widget _buildSubtitles(BuildContext context, Subtitles subtitles) {
+  Widget _buildSubtitles(BuildContext context, List<Subtitles> subtitles) {
     if (!_subtitleOn) {
       return const SizedBox();
     }
-    final currentSubtitle = subtitles.getByPosition(_subtitlesPosition);
+
+    if (chewieController.selectedSubtitles == null) {
+      return const SizedBox();
+    }
+
+    final currentSubtitle = chewieController.selectedSubtitles!.getByPosition(
+      _subtitlesPosition,
+    );
     if (currentSubtitle.isEmpty) {
       return const SizedBox();
     }
@@ -468,7 +476,7 @@ class _MaterialControlsState extends State<MaterialControls>
 
   Widget _buildSubtitleToggle() {
     //if don't have subtitle hiden button
-    if (chewieController.subtitle?.isEmpty ?? true) {
+    if (chewieController.subtitlesList?.isEmpty ?? true) {
       return const SizedBox();
     }
     return GestureDetector(
@@ -488,9 +496,31 @@ class _MaterialControlsState extends State<MaterialControls>
   }
 
   void _onSubtitleTap() {
-    setState(() {
-      _subtitleOn = !_subtitleOn;
-    });
+    if (chewieController.subtitlesList?.isEmpty ?? true) {
+      return;
+    }
+
+    if (chewieController.subtitlesList!.length == 1) {
+      setState(() {
+        _subtitleOn = !_subtitleOn;
+      });
+      return;
+    }
+
+    showModalBottomSheet<Subtitles>(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: chewieController.useRootNavigator,
+      builder: (context) => SubtitlesDialog(
+        subtitlesList: chewieController.subtitlesList!,
+        selectedSubtitles: chewieController.selectedSubtitles,
+        onSubtitlesSelected: (subtitles) {
+          Navigator.of(context).pop();
+          _subtitleOn = subtitles != null;
+          chewieController.selectedSubtitles = subtitles;
+        },
+      ),
+    );
   }
 
   void _cancelAndRestartTimer() {
@@ -506,7 +536,12 @@ class _MaterialControlsState extends State<MaterialControls>
   Future<void> _initialize() async {
     _subtitleOn =
         chewieController.showSubtitles &&
-        (chewieController.subtitle?.isNotEmpty ?? false);
+        (chewieController.subtitlesList?.isNotEmpty ?? false);
+
+    if (_subtitleOn) {
+      chewieController.selectedSubtitles ??=
+          chewieController.subtitlesList?.first;
+    }
     controller.addListener(_updateState);
 
     _updateState();

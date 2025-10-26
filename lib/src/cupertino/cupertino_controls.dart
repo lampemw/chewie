@@ -8,6 +8,7 @@ import 'package:chewie/src/chewie_player.dart';
 import 'package:chewie/src/chewie_progress_colors.dart';
 import 'package:chewie/src/cupertino/cupertino_progress_bar.dart';
 import 'package:chewie/src/cupertino/widgets/cupertino_options_dialog.dart';
+import 'package:chewie/src/cupertino/widgets/cupertino_subtitles_dialog.dart';
 import 'package:chewie/src/helpers/utils.dart';
 import 'package:chewie/src/models/option_item.dart';
 import 'package:chewie/src/models/subtitle_model.dart';
@@ -114,7 +115,9 @@ class _CupertinoControlsState extends State<CupertinoControls>
                         0.0,
                         notifier.hideStuff ? barHeight * 0.8 : 0.0,
                       ),
-                      child: _buildSubtitles(chewieController.subtitle!),
+                      child: _buildSubtitles(
+                        chewieController.selectedSubtitles,
+                      ),
                     ),
                   _buildBottomBar(backgroundColor, iconColor, barHeight),
                 ],
@@ -193,14 +196,20 @@ class _CupertinoControlsState extends State<CupertinoControls>
     );
   }
 
-  Widget _buildSubtitles(Subtitles subtitles) {
+  Widget _buildSubtitles(Subtitles? selectedSubtitles) {
     if (!_subtitleOn) {
       return const SizedBox();
     }
     if (_subtitlesPosition == null) {
       return const SizedBox();
     }
-    final currentSubtitle = subtitles.getByPosition(_subtitlesPosition!);
+
+    if (selectedSubtitles == null) {
+      return const SizedBox();
+    }
+    final currentSubtitle = selectedSubtitles.getByPosition(
+      _subtitlesPosition!,
+    );
     if (currentSubtitle.isEmpty) {
       return const SizedBox();
     }
@@ -456,8 +465,8 @@ class _CupertinoControlsState extends State<CupertinoControls>
   }
 
   Widget _buildSubtitleToggle(Color iconColor, double barHeight) {
-    //if don't have subtitle hiden button
-    if (chewieController.subtitle?.isEmpty ?? true) {
+    // If there are no subtitles, hide the button
+    if (chewieController.subtitlesList?.isEmpty ?? true) {
       return const SizedBox();
     }
     return GestureDetector(
@@ -477,9 +486,31 @@ class _CupertinoControlsState extends State<CupertinoControls>
   }
 
   void _subtitleToggle() {
-    setState(() {
-      _subtitleOn = !_subtitleOn;
-    });
+    if (chewieController.subtitlesList?.isEmpty ?? true) {
+      return;
+    }
+
+    if (chewieController.subtitlesList!.length == 1) {
+      setState(() {
+        _subtitleOn = !_subtitleOn;
+      });
+      return;
+    }
+
+    showCupertinoModalPopup<Subtitles>(
+      context: context,
+      semanticsDismissible: true,
+      useRootNavigator: chewieController.useRootNavigator,
+      builder: (context) => CupertinoSubtitlesDialog(
+        subtitlesList: chewieController.subtitlesList!,
+        selectedSubtitles: chewieController.selectedSubtitles,
+        onSubtitlesSelected: (subtitles) {
+          Navigator.of(context).pop();
+          _subtitleOn = subtitles != null;
+          chewieController.selectedSubtitles = subtitles;
+        },
+      ),
+    );
   }
 
   GestureDetector _buildSkipBack(Color iconColor, double barHeight) {
@@ -602,7 +633,12 @@ class _CupertinoControlsState extends State<CupertinoControls>
   Future<void> _initialize() async {
     _subtitleOn =
         chewieController.showSubtitles &&
-        (chewieController.subtitle?.isNotEmpty ?? false);
+        (chewieController.subtitlesList?.isNotEmpty ?? false);
+
+    if (_subtitleOn) {
+      chewieController.selectedSubtitles ??=
+          chewieController.subtitlesList?.first;
+    }
     controller.addListener(_updateState);
 
     _updateState();
